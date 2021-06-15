@@ -266,7 +266,7 @@ FE.1
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <caption>
-Reference Swipe \[Screened\]
+Reference Swipe (Screened)
 </caption>
 <thead>
 <tr>
@@ -319,7 +319,7 @@ Group None
 </table>
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <caption>
-Levenes Test \[Screened\]
+Levenes Test (Screened)
 </caption>
 <thead>
 <tr>
@@ -363,7 +363,7 @@ df.residual
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <caption>
-Reference Swipe \[Unscreened\]
+Reference Swipe (Unscreened)
 </caption>
 <thead>
 <tr>
@@ -416,7 +416,7 @@ Group None
 </table>
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <caption>
-Levenes Test \[Unscreened\]
+Levenes Test (Unscreened)
 </caption>
 <thead>
 <tr>

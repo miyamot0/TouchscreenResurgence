@@ -7,8 +7,6 @@ always_allow_html: yes
 knitr::opts_chunk$set(echo = FALSE,
                       fig.path = "README_figs/README-")
 
-options(knitr.table.format = "html")
-
 library(betareg)
 library(broom)
 library(car)
@@ -573,12 +571,12 @@ modDatabase.lev %>%
     Ave = mean(Responding),
     sd  = sd(Responding)
   ) %>%
-  kable(caption = "Reference Swipe [Screened]") %>%
+  kable(caption = "Reference Swipe (Screened)") %>%
   kableExtra::kable_styling(full_width = TRUE)
 
 car::leveneTest(Responding ~ Group, data = modDatabase.lev) %>%
   tidy() %>% 
-  kable(caption = "Levenes Test [Screened]") %>%
+  kable(caption = "Levenes Test (Screened)") %>%
   kableExtra::kable_styling(full_width = TRUE)
 
 ```
@@ -775,13 +773,14 @@ modDatabase.lev %>%
     Ave = mean(Responding),
     sd  = sd(Responding)
   ) %>%
-  kable(caption = "Reference Swipe [Unscreened]") %>%
+  kable(caption = "Reference Swipe (Unscreened)") %>%
   kableExtra::kable_styling(full_width = TRUE)
 
 car::leveneTest(Responding ~ Group, data = modDatabase.lev) %>%
   tidy() %>% 
-  kable(caption = "Levenes Test [Unscreened]") %>%
-  kableExtra::kable_styling(full_width = TRUE)
+  kable(caption = "Levenes Test (Unscreened)", "html") %>%
+  kableExtra::kable_styling(full_width = TRUE,
+                            position = "center")
 
 ```
 
