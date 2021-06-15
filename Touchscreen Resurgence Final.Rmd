@@ -1,0 +1,805 @@
+---
+title: "Resurgence Touchscreen App"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(betareg)
+library(broom)
+library(car)
+library(DHARMa) # glmmTMB model diagnostics
+library(emmeans)
+library(ggplot2)
+library(ggpubr)
+library(glmmTMB) # Package for zero-inflated mixed-model
+library(grid)
+library(gridExtra)
+library(emmeans)
+library(knitr)
+library(lme4) # Needed for R2 calculation
+library(MuMIn)
+library(lmerTest)
+library(lmtest)
+library(tidyverse)
+
+database.full   = read.csv("swipedataanglesallfull.csv") %>%
+  mutate(UID      = paste(ID, Group))
+
+#46 in full (47 actually, 1 is a dupe name)
+read.csv("swipedataanglesallfull.csv") %>%
+  select(ID) %>%
+  pull() %>%
+  unique() %>%
+  length(.)
+
+#30 in cleaned
+read.csv("swipedataanglesall.csv") %>%
+  select(ID) %>%
+  pull() %>%
+  unique() %>%
+  length(.)
+
+#30 in cleaned
+database.screen.id = read.csv("swipedataanglesall.csv") %>%
+  mutate(UID      = paste(ID, Group)) %>%
+  select(UID) %>%
+  pull() %>%
+  unique()
+
+database.full = database.full %>%
+  mutate(Included = ifelse(UID %in% database.screen.id, TRUE, FALSE))
+
+store =
+database.full %>%
+  group_by(Included, UID) %>%
+  slice(1) %>%
+  summarise(
+    Count = n()
+  )
+
+mControl = glmmTMBControl(
+  optCtrl = list(
+    iter.max = 1e6,
+    eval.max = 1e6
+  )
+)
+
+range      <- 180
+binWidth   <- 11.25
+binCounts  <- (range / binWidth) + 1 #16
+ns         <- seq(0, binCounts - 1)
+ns         <- ns * binWidth
+ns.corr    <- ns - 90
+
+diameterLen <- 100
+textSize <- 4
+plotMargins <- c(0,
+                 0,
+                 0,
+                 0)
+
+Round <- function(x,y) {
+  if((y - x %% y) <= x %% y) { x + (y - x %% y)}
+  else { x - (x %% y)}
+}
+```
+
+### RQ1: To what degree does the duration of target-reinforcement history in Phase 1 influence observed rates of resurgence as target responses as a proportion of previously reinforced responses (i.e., Target, Alternative)?
+
+#### Screened Set
+
+```{r rq1screenedRE, message=FALSE, warning=FALSE}
+
+database <- database.full %>%
+  filter(Included == TRUE) %>%
+  mutate(Angle.Diff = Angle - Base.Angle,
+         Responding = Angle.Diff,
+         Responding = ifelse(Responding < -270, 360-abs(Responding), Responding),
+         Responding = ifelse(Responding < -180, 180-abs(Responding), Responding),
+         Responding = ifelse(Responding >  270, 360-abs(Responding), Responding),
+         Responding = ifelse(Responding >  180, 180-abs(Responding), Responding)) %>%#,
+  filter(Phase == "C") %>%
+  mutate(Responding = abs(Responding)) %>%
+  mutate(Response   = ifelse(Responding <= 22.5,  "Target", "Other")) %>%
+  mutate(Response   = ifelse(Responding >= 157.5, "Alternative", Response)) %>%
+  mutate(Response   = ifelse(Response == "Other", "Control", Response)) %>%
+  mutate(Responding = ifelse(Responding > 90,     Responding - 90, Responding)) %>%
+  mutate(Responding = Responding - 45)
+
+for (i in unique(database$UID)) {
+  startTime <- database %>%
+    filter(UID == i) %>%
+    select(Time) %>%
+    pull() %>%
+    min()
+
+  database[database$UID == i, "SessionTime"] <- (database[database$UID == i, 
+                                                         "Time"] - startTime)/1000
+  database[database$UID == i, "Time"] <- floor(database[database$UID == i, 
+                                                       "SessionTime"] / 20) + 1
+}
+
+database.organized <- database %>%
+  group_by(UID, Group, Time, Response) %>%
+  summarise(
+    Frequency = n()
+  ) %>%
+  spread(Response, Frequency) %>%
+  mutate(Alternative = ifelse(is.na(Alternative), 0, Alternative),
+         Control     = ifelse(is.na(Control),     0, Control),
+         Target      = ifelse(is.na(Target),      0, Target)) %>%
+  mutate(Proportion = Target / (Alternative + Target)) %>%
+  filter(Proportion > 0 & Proportion < 1)
+
+RE.NO <- betareg(Proportion ~ Time * Group,
+                 data = database.organized,
+                 link = "logit",
+                 na.action = na.omit)
+
+RE.1 <- glmmTMB(Proportion ~ Time * Group + (1 | UID),
+                control = mControl,
+                family=beta_family(),
+                REML = TRUE,
+                na.action = na.omit,
+                data = database.organized)
+
+RE.2 <- glmmTMB(Proportion ~ Time * Group + (Time | UID),
+                control = mControl,
+                family=beta_family(),
+                REML = TRUE,
+                na.action = na.omit,
+                data = database.organized)
+
+AICc(RE.NO, RE.1, RE.2) %>%
+  kable(caption = "RE Comparisons [RE.NO Selected]") %>%
+  kableExtra::kable_styling(full_width = TRUE)
+
+```
+
+Model evaluations suggested that beta regression alone [RE.NO], without random effects, best characterized the available data.
+
+```{r rq1screenedFE, message=FALSE, warning=FALSE}
+
+FE.0 <- betareg(Proportion ~ Time * Group,
+                 data = database.organized,
+                 link = "logit",
+                 na.action = na.omit)
+
+FE.1 <- betareg(Proportion ~ Time + Group,
+                data = database.organized,
+                link = "logit",
+                na.action = na.omit)
+
+AIC(FE.0, FE.1) %>%
+  kable(caption = "FE Comparisons [FE.1 Selected, no interaction]") %>%
+  kableExtra::kable_styling(full_width = TRUE)
+ 
+database.organized$pred = predict(FE.1,
+                                  level = 0,
+                                  type = "response",
+                                  re.form = NA)
+
+database.organized$predi= predict(FE.1,
+                                 type = "response",
+                                 re.form = NULL)
+
+pop = ggplot(database.organized, aes(Time, pred, color = Group)) +
+  ylim(0,1) +
+  theme_bw() +
+  geom_line()
+
+estimates = emmeans::emmeans(FE.1, ~ Time | Group, type = "response",
+                             at = list(
+                               Time = c(1, 2, 3, 4, 5, 6)
+                               )) %>%
+  as.data.frame()
+ 
+ggplot(database.organized, aes(Time, predi,
+                                     color = Group,
+                                     group = UID)) +
+  ylim(0,1) +
+  theme_bw() +
+  geom_line() +
+  geom_ribbon(data = estimates, aes(y    = emmean,
+                                    x    = Time,
+                                    ymin = asymp.LCL,
+                                    ymax = asymp.UCL),
+              alpha = 0.5, inherit.aes = FALSE) +
+  geom_line(data = estimates, aes(y    = emmean,
+                                  x    = Time,),
+            size = 2, inherit.aes = FALSE) +
+  labs(
+    y = "Proportion of Target",
+    x = "10s Bin",
+    title = "Screened dataset (Null Except for Intercept)"
+  ) +
+  theme(
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~Group)
+
+summary(FE.1)
+
+```
+
+#### Unscreened Set
+
+Note: The AICc was close, but I prefer to go maximal (more complex) whenever possible.
+
+```{r rq1unscreenedRE, message=FALSE, warning=FALSE}
+
+database <- database.full %>%
+  mutate(Angle.Diff = Angle - Base.Angle,
+         Responding = Angle.Diff,
+         Responding = ifelse(Responding < -270, 360-abs(Responding), Responding),
+         Responding = ifelse(Responding < -180, 180-abs(Responding), Responding),
+         Responding = ifelse(Responding >  270, 360-abs(Responding), Responding),
+         Responding = ifelse(Responding >  180, 180-abs(Responding), Responding)) %>%#,
+  filter(Phase == "C") %>%
+  mutate(Responding = abs(Responding)) %>%
+  mutate(Response   = ifelse(Responding <= 22.5, "Target", "Other")) %>%
+  mutate(Response   = ifelse(Responding >= 157.5, "Alternative", Response)) %>%
+  mutate(Response   = ifelse(Response == "Other", "Control", Response)) %>%
+  # Normalize sides
+  mutate(Responding = ifelse(Responding > 90, Responding - 90, Responding)) %>%
+  # Normalize to zero
+  mutate(Responding = Responding - 45)
+
+for (i in unique(database$UID)) {
+  startTime <- database %>%
+    filter(UID == i) %>%
+    select(Time) %>%
+    pull() %>%
+    min()
+
+  database[database$UID == i, "SessionTime"] <- (database[database$UID == i, 
+                                                         "Time"] - startTime)/1000
+  database[database$UID == i, "Time"] <- floor(database[database$UID == i, 
+                                                       "SessionTime"] / 20) + 1
+}
+
+database.organized <- database %>%
+  group_by(UID, Group, Time, Response) %>%
+  summarise(
+    Frequency = n()
+  ) %>%
+  spread(Response, Frequency) %>%
+  mutate(Alternative = ifelse(is.na(Alternative), 0, Alternative),
+         Control     = ifelse(is.na(Control),     0, Control),
+         Target      = ifelse(is.na(Target),      0, Target)) %>%
+  mutate(Proportion = Target / (Alternative + Target)) %>%
+  filter(Proportion > 0 & Proportion < 1)
+
+RE.NO <- betareg(Proportion ~ Time * Group,
+                 data = database.organized,
+                 link = "logit",
+                 na.action = na.omit)
+
+RE.1 <- glmmTMB(Proportion ~ Time * Group + (1 | UID),
+                control = mControl,
+                family=beta_family(),
+                REML = TRUE,
+                na.action = na.omit,
+                data = database.organized)
+
+RE.2 <- glmmTMB(Proportion ~ Time * Group + (Time | UID),
+                control = mControl,
+                family=beta_family(),
+                REML = TRUE,
+                na.action = na.omit,
+                data = database.organized)
+
+AICc(RE.NO, RE.1, RE.2) %>%
+  kable(caption = "RE Comparisons [RE.1 Selected]") %>%
+  kableExtra::kable_styling(full_width = TRUE)
+
+```
+
+```{r rq1unscreenedFE, message=FALSE, warning=FALSE}
+
+FE.0 <- glmmTMB(Proportion ~ Time * Group + (1 | UID),
+                control = mControl,
+                family=beta_family(),
+                REML = TRUE,
+                na.action = na.omit,
+                data = database.organized)
+
+FE.1 <- glmmTMB(Proportion ~ Time + Group + (1 | UID),
+                control = mControl,
+                family=beta_family(),
+                REML = TRUE,
+                na.action = na.omit,
+                data = database.organized)
+
+AICc(FE.0, FE.1) %>%
+  kable(caption = "FE Comparisons [FE.1 Selected, no interaction]") %>%
+  kableExtra::kable_styling(full_width = TRUE)
+
+database.organized$pred = predict(FE.1,
+                                  level = 0,
+                                  type = "response",
+                                  re.form = NA)
+
+database.organized$predi= predict(FE.1,
+                                  type = "response",
+                                  re.form = NULL)
+
+pop = ggplot(database.organized, aes(Time, pred, color = Group)) +
+  ylim(0,1) +
+  theme_bw() +
+  geom_line()
+
+estimates = emmeans(FE.1, ~ Time | Group, type = "response",
+                    at = list(
+                      Time = c(1, 2, 3, 4, 5, 6)
+                      )) %>%
+  as.data.frame()
+
+database.organized = database.organized %>% 
+  ungroup()
+
+ggplot(database.organized, aes(Time, predi,
+                                     color = Group,
+                                     group = UID)) +
+  ylim(0,1) +
+  theme_bw() +
+  geom_line() +
+  geom_ribbon(data = estimates, aes(y    = response,
+                                    x    = Time,
+                                    ymin = lower.CL,
+                                    ymax = upper.CL),
+              alpha = 0.5,
+              inherit.aes = FALSE) +
+  geom_line(data = estimates, aes(y    = response,
+                                  x    = Time), 
+            size = 2,
+            inherit.aes = FALSE) +
+  labs(
+    y = "Proportion of Target",
+    x = "10s Bin",
+    title = "Unscreened dataset (effect for Time)"
+  ) +
+  theme(
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~Group)
+
+summary(FE.1)
+
+```
+
+### RQ2: Does the duration of target-reinforcement history in Phase 1 contribute to different gradients of non-reinforced/control responding around targeted responding when undergoing extinction of alternative responding? 
+
+#### Screened Set
+
+```{r rq3ScreenedHisto, message=FALSE}
+
+database <- database.full %>%
+  filter(Included == TRUE) %>%
+  mutate(Angle.Diff = Angle - Base.Angle,
+         Group = as.character(Group),
+         Group = substr(Group, 7, nchar(Group))) %>%
+  filter(Phase == "C" & Angle.Diff >= -90 & Angle.Diff <= 90) %>%
+  mutate(Interval = cut(Angle.Diff, breaks = seq(-90, 90, length.out = 19))) %>%
+  mutate(Interval = forcats::fct_explicit_na(Interval)) %>%
+  filter(Interval != "(Missing)")
+
+database$Group = factor(database$Group,
+                        levels = c(
+                          "Long",
+                          "Short",
+                          "None"
+                        ))
+
+linePlotData <- database %>%
+  group_by(Group, Interval) %>%
+  summarise(
+    Counts = n()
+  ) %>%
+  mutate(
+    xValue = rep(1:18)
+  ) %>%
+  ungroup() %>%
+  mutate(Interval = str_replace(Interval, ']', ')'),
+         Interval = as.factor(Interval))
+
+xlabs <- levels(linePlotData$Interval)[levels(linePlotData$Interval) != "(Missing)"]
+
+ggplot(linePlotData, aes(x = xValue, y = Counts,
+                         fill = Group, group = Group,
+                         pch = Group)) +
+  geom_line() +
+  geom_point(colour = "black", size = 4) +
+  xlab("Distance from Original Swipe (Angle)") +
+  ylab("Swipe Frequency") +
+  papaja::theme_apa(base_size = 14) +
+  scale_x_continuous(breaks = 1:18,
+                     labels = xlabs) +
+  geom_vline(xintercept = 7.75, color="black", linetype="dashed", size=.75) +
+  geom_vline(xintercept = 11.25, color="black", linetype="dashed", size=.75) +
+  scale_fill_manual(name = "Group",
+                     values = c("Long" = "#000000",
+                                "Short" = "#666666",
+                                "None" = "#FEFEFE")) +
+  scale_shape_manual(
+    values = c(
+      "Long" = 21,
+      "Short" = 22,
+      "None" = 24
+    )
+  ) +
+  theme(axis.text.x = element_text(angle = 90,
+                                   vjust = 0.5,
+                                   hjust=1,
+                                   color = "black"),
+        legend.position = 'bottom')
+
+```
+
+```{r rq3ScreenedRose, message=FALSE, warning=FALSE, fig.width=8.5, fig.width=11}
+
+database <- database.full %>%
+  filter(Included == TRUE) %>%
+  mutate(Angle.Diff = ifelse(Angle.Diff < 0, Angle.Diff + 360, Angle.Diff),
+         Response = NA) %>%
+  filter(Phase != "A")
+
+database <- database %>%
+  group_by(ID, Phase) %>%
+  mutate(MaxTime = max(Time)) %>%
+  ungroup() %>%
+  mutate(CurrentTime = MaxTime - Time) %>% # Adds in relative distance to end of phase
+  filter(CurrentTime < 120000) # only pull last two min from included phases
+
+d = database %>%
+  mutate(Response = ifelse(Angle.Diff < 22.5,  "Target", Response),
+         Response = ifelse(Angle.Diff > 337.5, "Target", Response),
+         Response = ifelse(Angle.Diff < 202.5 & Angle.Diff > 157.5, "Alternative", Response),
+         Response = ifelse(is.na(Response), "Control", Response),
+         #Angle.Diff = plyr::round_any(Angle.Diff, 10, f = floor)) %>%
+         Angle.Diff = Round(Angle.Diff, 22.5)) %>%
+  group_by(Phase, Group, Angle.Diff, Response) %>%
+  dplyr::summarise(
+    Frequency = n()
+  )
+
+d$Group = factor(d$Group,
+               levels = c("Group Long", "Group Short", "Group None"),
+               labels = c("Long", "Short", "None"))
+
+d$Phase = factor(d$Phase,
+                 levels = c("B", "C"),
+                 labels = c("Phase 2", "Phase 3"))
+
+plotPrintAll <- ggplot(d, aes(x = Angle.Diff,
+              y = Frequency,
+              fill = Response)) +
+  ggtitle("Swipe Directions across Both Phase 2 and Phase 3") +
+  coord_polar(theta = "x",
+              start = 0) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, 360, 22.5)) +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(name = "Response",
+                    values = c(Control = "#C6C5C3",
+                               Alternative = "#8E8B8A",
+                               Target = "black")) +
+  jtools::theme_apa() +
+  theme(axis.text    = element_text(color = "black"),
+      panel.grid   = element_blank(),
+      axis.line    = element_line(color = "black",
+                                  size = 0),
+      panel.border = element_rect(size = 0),
+      axis.ticks = element_line(size = 1),
+      strip.background = element_blank(),
+      #strip.text = element_blank(),
+      panel.spacing = unit(1, "lines"),
+      axis.text.y = element_blank(),
+      axis.ticks.y.left = element_blank(),
+      legend.position = "none") +
+  facet_grid(Phase~Group)
+
+# plotPrintAll
+
+d <- d %>%
+  filter(Phase == "Phase 3")
+
+plotPrintFocus <- ggplot(d, aes(x = Angle.Diff,
+                           y = Frequency,
+                           fill = Response)) +
+  ggtitle("Swipe Directions across Phase 3 (Magnified)") +
+  coord_polar(theta = "x",
+              start = 0) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, 360, 22.5)) +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(name = "Response",
+                    values = c(Control = "#C6C5C3",
+                               Alternative = "#8E8B8A",
+                               Target = "black")) +
+  jtools::theme_apa() +
+  theme(axis.text    = element_text(color = "black"),
+        panel.grid   = element_blank(),
+        axis.line    = element_line(color = "black",
+                                    size = 0),
+        panel.border = element_rect(size = 0),
+        axis.ticks = element_line(size = 1),
+        strip.background = element_blank(),
+        panel.spacing = unit(1, "lines"),
+        #strip.text = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y.left = element_blank(),
+        legend.position = "bottom") +
+  facet_grid(Phase~Group)
+
+# plotPrint <- grid.arrange(plotPrintAll, plotPrintFocus,
+#              heights=c(0.6, 0.4),
+#              nrow = 2)
+
+# plotPrint <- grid.arrange(plotPrintAll, plotPrintFocus,
+#              heights=c(0.6, 0.4),
+#              nrow = 2)
+
+plotPrintAll
+
+plotPrintFocus
+
+#ggsave("Rose - Screened.png", plot = plotPrint, width = 8.5, height = 11, units = "in", dpi = 600)
+
+```
+
+```{r rq3ScreenedLevenes}
+
+database <- database.full %>%
+  filter(Included == TRUE) %>%
+  mutate(Responding = Angle.Diff) %>%
+  filter(Phase == "C")
+
+modDatabase.lev <- database %>%
+  mutate(Responding = (Angle.Diff),
+         Responding = ifelse(Responding < -270, 360-abs(Responding), Responding),
+         Responding = ifelse(Responding < -180, 180-abs(Responding), Responding),
+         Responding = ifelse(Responding < -90,  180-abs(Responding), Responding),
+         Responding = ifelse(Responding >  90,  180-abs(Responding), Responding),
+         Group = factor(Group, levels=c("Group Long",
+                                        "Group Short",
+                                        "Group None")),
+         Response = ifelse(Response == 1, "Target", "Alternative"),
+         Response = ifelse(Responding > 22.5, "Control", Response),
+         Response = ifelse(Responding < -22.5, "Control", Response)) %>%
+  select(Group, Response, Responding) %>%
+  filter(Response != "Control")
+
+modDatabase.lev %>%
+  group_by(Group) %>%
+  dplyr::summarise(
+    Ave = mean(Responding),
+    sd  = sd(Responding)
+  ) %>%
+  kable(caption = "Reference Swipe [Screened]") %>%
+  kableExtra::kable_styling(full_width = TRUE)
+
+car::leveneTest(Responding ~ Group, data = modDatabase.lev) %>%
+  tidy() %>% 
+  kable(caption = "Levenes Test [Screened]") %>%
+  kableExtra::kable_styling(full_width = TRUE)
+
+```
+
+#### Unscreened Set
+
+```{r rq3UnscreenedHisto, message=FALSE}
+
+database <- database.full %>%
+  mutate(Angle.Diff = Angle - Base.Angle,
+         Group = as.character(Group),
+         Group = substr(Group, 7, nchar(Group))) %>%
+  filter(Phase == "C" & Angle.Diff >= -90 & Angle.Diff <= 90) %>%
+  mutate(Interval = cut(Angle.Diff, breaks = seq(-90, 90, length.out = 19))) %>%
+  mutate(Interval = forcats::fct_explicit_na(Interval)) %>%
+  filter(Interval != "(Missing)")
+
+database$Group = factor(database$Group,
+                        levels = c(
+                          "Long",
+                          "Short",
+                          "None"
+                        ))
+
+linePlotData <- database %>%
+  group_by(Group, Interval) %>%
+  summarise(
+    Counts = n()
+  ) %>%
+  mutate(
+    xValue = rep(1:18)
+  ) %>%
+  ungroup() %>%
+  mutate(Interval = str_replace(Interval, ']', ')'),
+         Interval = as.factor(Interval))
+
+xlabs <- levels(linePlotData$Interval)[levels(linePlotData$Interval) != "(Missing)"]
+
+ggplot(linePlotData, aes(x = xValue, y = Counts,
+                         fill = Group, group = Group,
+                         pch = Group)) +
+  geom_line() +
+  geom_point(colour = "black", size = 4) +
+  xlab("Distance from Original Swipe (Angle)") +
+  ylab("Swipe Frequency") +
+  papaja::theme_apa(base_size = 14) +
+  scale_x_continuous(breaks = 1:18,
+                     labels = xlabs) +
+  geom_vline(xintercept = 7.75, color="black", linetype="dashed", size=.75) +
+  geom_vline(xintercept = 11.25, color="black", linetype="dashed", size=.75) +
+  scale_fill_manual(name = "Group",
+                     values = c("Long" = "#000000",
+                                "Short" = "#666666",
+                                "None" = "#FEFEFE")) +
+  scale_shape_manual(
+    values = c(
+      "Long" = 21,
+      "Short" = 22,
+      "None" = 24
+    )
+  ) +
+  theme(axis.text.x = element_text(angle = 90,
+                                   vjust = 0.5,
+                                   hjust=1,
+                                   color = "black"),
+        legend.position = 'bottom')
+
+```
+
+```{r rq3UnscreenedRose, message=FALSE, warning=FALSE, fig.width=8.5, fig.width=11}
+
+database <- database.full %>%
+  mutate(Angle.Diff = ifelse(Angle.Diff < 0, Angle.Diff + 360, Angle.Diff),
+         Response = NA) %>%
+  filter(Phase != "A")
+
+database <- database %>%
+  group_by(ID, Phase) %>%
+  mutate(MaxTime = max(Time)) %>%
+  ungroup() %>%
+  mutate(CurrentTime = MaxTime - Time) %>% # Adds in relative distance to end of phase
+  filter(CurrentTime < 120000) # only pull last two min from included phases
+
+d = database %>%
+  mutate(Response = ifelse(Angle.Diff < 22.5,  "Target", Response),
+         Response = ifelse(Angle.Diff > 337.5, "Target", Response),
+         Response = ifelse(Angle.Diff < 202.5 & Angle.Diff > 157.5, "Alternative", Response),
+         Response = ifelse(is.na(Response), "Control", Response),
+         #Angle.Diff = plyr::round_any(Angle.Diff, 10, f = floor)) %>%
+         Angle.Diff = Round(Angle.Diff, 22.5)) %>%
+  group_by(Phase, Group, Angle.Diff, Response) %>%
+  dplyr::summarise(
+    Frequency = n()
+  )
+
+d$Group = factor(d$Group,
+               levels = c("Group Long", "Group Short", "Group None"),
+               labels = c("Long", "Short", "None"))
+
+d$Phase = factor(d$Phase,
+                 levels = c("B", "C"),
+                 labels = c("Phase 2", "Phase 3"))
+
+plotPrintAll <- ggplot(d, aes(x = Angle.Diff,
+              y = Frequency,
+              fill = Response)) +
+  ggtitle("Swipe Directions across Both Phase 2 and Phase 3") +
+  coord_polar(theta = "x",
+              start = 0) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, 360, 22.5)) +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(name = "Response",
+                    values = c(Control = "#C6C5C3",
+                               Alternative = "#8E8B8A",
+                               Target = "black")) +
+  jtools::theme_apa() +
+  theme(axis.text    = element_text(color = "black"),
+      panel.grid   = element_blank(),
+      axis.line    = element_line(color = "black",
+                                  size = 0),
+      panel.border = element_rect(size = 0),
+      axis.ticks = element_line(size = 1),
+      strip.background = element_blank(),
+      #strip.text = element_blank(),
+      panel.spacing = unit(1, "lines"),
+      axis.text.y = element_blank(),
+      axis.ticks.y.left = element_blank(),
+      legend.position = "none") +
+  facet_grid(Phase~Group)
+
+# plotPrintAll
+
+d <- d %>%
+  filter(Phase == "Phase 3")
+
+plotPrintFocus <- ggplot(d, aes(x = Angle.Diff,
+                           y = Frequency,
+                           fill = Response)) +
+  ggtitle("Swipe Directions across Phase 3 (Magnified)") +
+  coord_polar(theta = "x",
+              start = 0) +
+  geom_bar(stat = "identity") +
+  scale_x_continuous(breaks = seq(0, 360, 22.5)) +
+  xlab("") +
+  ylab("") +
+  scale_fill_manual(name = "Response",
+                    values = c(Control = "#C6C5C3",
+                               Alternative = "#8E8B8A",
+                               Target = "black")) +
+  jtools::theme_apa() +
+  theme(axis.text    = element_text(color = "black"),
+        panel.grid   = element_blank(),
+        axis.line    = element_line(color = "black",
+                                    size = 0),
+        panel.border = element_rect(size = 0),
+        axis.ticks = element_line(size = 1),
+        strip.background = element_blank(),
+        panel.spacing = unit(1, "lines"),
+        #strip.text = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y.left = element_blank(),
+        legend.position = "bottom") +
+  facet_grid(Phase~Group)
+
+# plotPrint <- grid.arrange(plotPrintAll, plotPrintFocus,
+#              heights=c(0.6, 0.4),
+#              nrow = 2)
+
+plotPrintAll
+
+plotPrintFocus
+
+#ggsave("Rose - Screened.png", plot = plotPrint, width = 8.5, height = 11, units = "in", dpi = 600)
+
+```
+
+```{r rq3UnscreenedLevenes}
+
+database <- database.full %>%
+  mutate(Responding = Angle.Diff) %>%
+  filter(Phase == "C")
+
+modDatabase.lev <- database %>%
+  mutate(Responding = (Angle.Diff),
+         Responding = ifelse(Responding < -270, 360-abs(Responding), Responding),
+         Responding = ifelse(Responding < -180, 180-abs(Responding), Responding),
+         Responding = ifelse(Responding < -90,  180-abs(Responding), Responding),
+         Responding = ifelse(Responding >  90,  180-abs(Responding), Responding),
+         Group = factor(Group, levels=c("Group Long",
+                                        "Group Short",
+                                        "Group None")),
+         Response = ifelse(Response == 1, "Target", "Alternative"),
+         Response = ifelse(Responding > 22.5, "Control", Response),
+         Response = ifelse(Responding < -22.5, "Control", Response)) %>%
+  select(Group, Response, Responding) %>%
+  filter(Response != "Control")
+
+modDatabase.lev %>%
+  group_by(Group) %>%
+  dplyr::summarise(
+    Ave = mean(Responding),
+    sd  = sd(Responding)
+  ) %>%
+  kable(caption = "Reference Swipe [Unscreened]") %>%
+  kableExtra::kable_styling(full_width = TRUE)
+
+car::leveneTest(Responding ~ Group, data = modDatabase.lev) %>%
+  tidy() %>% 
+  kable(caption = "Levenes Test [Unscreened]") %>%
+  kableExtra::kable_styling(full_width = TRUE)
+
+```
+
