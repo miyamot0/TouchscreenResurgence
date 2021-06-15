@@ -20,6 +20,7 @@ library(gridExtra)
 library(emmeans)
 library(knitr)
 library(lme4) # Needed for R2 calculation
+library(nlme)
 library(MuMIn)
 library(lmerTest)
 library(lmtest)
@@ -85,6 +86,92 @@ Round <- function(x,y) {
   if((y - x %% y) <= x %% y) { x + (y - x %% y)}
   else { x - (x %% y)}
 }
+```
+
+## Examining Effects of Training Duration on Humans’ Resurgence and Variability Using a Novel Touchscreen Procedure
+
+## Authors
+
+- Carolyn M. Ritchey (Auburn University)
+
+- Yuto Mizutani (Aichi Gakuin University)
+
+- Toshikazu Kuroda (Huckle Co., Ltd., Aichi, Japan; Aichi Bunkyo University)
+
+- Shawn Gilroy (Louisiana State University)
+
+- Christopher A. Podlesnik (Auburn University)
+
+## Abstract
+
+Resurgence occurs when a previously reinforced and then extinguished target response increases due to reducing/eliminating an alternative source of reinforcement or punishing an alternative response. We evaluated whether duration of reinforcement history for a target response (1) affects the degree to which a resurgence effect is observed in humans and (2) produces different gradients of response generalization around target responding during extinction testing. We arranged a novel touchscreen interface in which university students could swipe a 3D soccer ball to spin any direction. In Phase 1, the first direction swiped became the target and produced points exchangeable for money for 3 or 1 min across two groups. The first swipe was recorded but had no programmed consequence in a third group. In Phase 2, swipes 180-degrees from the target resulted in points for 3 min in all groups. Point deliveries ceased for 2 min to test for resurgence in Phase 3. Target responses resurged during testing to a relatively greater extent with longer Phase-1 training but gradients of response generalization did not differ among groups. These findings extend prior research on the role of training duration on resurgence. We discuss methodological and conceptual issues surrounding the assessment of response generalization in resurgence. 
+
+### Descriptives
+
+```{r descriptiveScreened}
+
+uData     <- read.csv ("Swipe U Value.csv", header = TRUE)
+
+uData.grp <- groupedData(Uvalue ~ as.factor(Group) * 
+                           as.factor(Phase) * 
+                           as.numeric(Time) | id, 
+                         data = uData)
+
+fullModel <- gls(Uvalue ~ Group * Phase * Time, 
+                 data = uData.grp,
+                 method = "ML",
+                 corr = corCompSymm(form= ~ 1 | id))
+
+rstModl.1 <- gls(Uvalue ~ Group + Phase + Time + Group:Phase + Group:Time + Phase:Time, 
+                 data = uData.grp,
+                 method = "ML",
+                 corr = corCompSymm(form= ~ 1 | id))
+
+anova(fullModel, rstModl.1)
+
+rstModl.2 <- gls(Uvalue ~ Group + Phase + Time + Group:Phase + Phase:Time, 
+                 data = uData.grp,
+                 method = "ML",
+                 corr = corCompSymm(form= ~ 1 | id))
+
+anova(rstModl.1, rstModl.2)
+
+rstModl.3 <- gls(Uvalue ~ Group + Phase + Time + Group:Phase, 
+                 data = uData.grp,
+                 method = "ML",
+                 corr = corCompSymm(form= ~ 1 | id))
+
+anova(rstModl.2, rstModl.3)
+
+rstModl.4 <- gls(Uvalue ~ Group + Phase + Time, 
+                 data = uData.grp,
+                 method = "ML",
+                 corr = corCompSymm(form= ~ 1 | id))
+
+anova(rstModl.3, rstModl.4)
+
+summary(rstModl.2)
+
+uData.grp$Phase = as.factor(uData.grp$Phase)
+uData.grp$pred = predict(rstModl.2)
+
+ggplot(uData.grp, aes(Time, pred,
+                      color = Phase)) +
+  geom_line() +
+  ylim(0, 1) +
+  labs(
+    y = "Proportion of Target",
+    x = "10s Bin",
+    title = "Screened dataset (Null Except for Intercept)"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "bottom"
+  ) +
+  facet_wrap(~ Group)
+
+
+
 ```
 
 ### RQ1: To what degree does the duration of target-reinforcement history in Phase 1 influence observed rates of resurgence as target responses as a proportion of previously reinforced responses (i.e., Target, Alternative)?
@@ -173,7 +260,7 @@ FE.1 <- betareg(Proportion ~ Time + Group,
                 link = "logit",
                 na.action = na.omit)
 
-AIC(FE.0, FE.1) %>%
+AICc(FE.0, FE.1) %>%
   kable(caption = "FE Comparisons (FE.1 Selected, no interaction)") %>%
   kableExtra::kable_styling(full_width = TRUE)
  
