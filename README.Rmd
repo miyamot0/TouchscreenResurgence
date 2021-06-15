@@ -1,12 +1,13 @@
 ---
-title: "Resurgence Touchscreen App"
-output:
-  html_document: default
-  pdf_document: default
+output: github_document
+always_allow_html: yes
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.path = "README_figs/README-")
+
+options(knitr.table.format = "html")
 
 library(betareg)
 library(broom)
@@ -155,7 +156,7 @@ RE.2 <- glmmTMB(Proportion ~ Time * Group + (Time | UID),
                 data = database.organized)
 
 AICc(RE.NO, RE.1, RE.2) %>%
-  kable(caption = "RE Comparisons [RE.NO Selected]") %>%
+  kable(caption = "RE Comparisons (RE.NO Selected)") %>%
   kableExtra::kable_styling(full_width = TRUE)
 
 ```
@@ -175,7 +176,7 @@ FE.1 <- betareg(Proportion ~ Time + Group,
                 na.action = na.omit)
 
 AIC(FE.0, FE.1) %>%
-  kable(caption = "FE Comparisons [FE.1 Selected, no interaction]") %>%
+  kable(caption = "FE Comparisons (FE.1 Selected, no interaction)") %>%
   kableExtra::kable_styling(full_width = TRUE)
  
 database.organized$pred = predict(FE.1,
@@ -294,7 +295,7 @@ RE.2 <- glmmTMB(Proportion ~ Time * Group + (Time | UID),
                 data = database.organized)
 
 AICc(RE.NO, RE.1, RE.2) %>%
-  kable(caption = "RE Comparisons [RE.1 Selected]") %>%
+  kable(caption = "RE Comparisons (RE.1 Selected)") %>%
   kableExtra::kable_styling(full_width = TRUE)
 
 ```
@@ -316,7 +317,7 @@ FE.1 <- glmmTMB(Proportion ~ Time + Group + (1 | UID),
                 data = database.organized)
 
 AICc(FE.0, FE.1) %>%
-  kable(caption = "FE Comparisons [FE.1 Selected, no interaction]") %>%
+  kable(caption = "FE Comparisons (FE.1 Selected, no interaction)") %>%
   kableExtra::kable_styling(full_width = TRUE)
 
 database.organized$pred = predict(FE.1,
@@ -538,19 +539,9 @@ plotPrintFocus <- ggplot(d, aes(x = Angle.Diff,
         legend.position = "bottom") +
   facet_grid(Phase~Group)
 
-# plotPrint <- grid.arrange(plotPrintAll, plotPrintFocus,
-#              heights=c(0.6, 0.4),
-#              nrow = 2)
-
-# plotPrint <- grid.arrange(plotPrintAll, plotPrintFocus,
-#              heights=c(0.6, 0.4),
-#              nrow = 2)
-
 plotPrintAll
 
 plotPrintFocus
-
-#ggsave("Rose - Screened.png", plot = plotPrint, width = 8.5, height = 11, units = "in", dpi = 600)
 
 ```
 
@@ -720,10 +711,7 @@ plotPrintAll <- ggplot(d, aes(x = Angle.Diff,
       legend.position = "none") +
   facet_grid(Phase~Group)
 
-# plotPrintAll
-
-d <- d %>%
-  filter(Phase == "Phase 3")
+d <- d %>% filter(Phase == "Phase 3")
 
 plotPrintFocus <- ggplot(d, aes(x = Angle.Diff,
                            y = Frequency,
@@ -754,15 +742,9 @@ plotPrintFocus <- ggplot(d, aes(x = Angle.Diff,
         legend.position = "bottom") +
   facet_grid(Phase~Group)
 
-# plotPrint <- grid.arrange(plotPrintAll, plotPrintFocus,
-#              heights=c(0.6, 0.4),
-#              nrow = 2)
-
 plotPrintAll
 
 plotPrintFocus
-
-#ggsave("Rose - Screened.png", plot = plotPrint, width = 8.5, height = 11, units = "in", dpi = 600)
 
 ```
 
