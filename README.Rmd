@@ -227,8 +227,6 @@ summary(FE.1)
 
 #### Unscreened Set
 
-Note: The AICc was close, but I prefer to go maximal (more complex) whenever possible.
-
 ```{r rq1unscreenedRE, message=FALSE, warning=FALSE}
 
 database <- database.full %>%
@@ -297,6 +295,8 @@ AICc(RE.NO, RE.1, RE.2) %>%
   kableExtra::kable_styling(full_width = TRUE)
 
 ```
+
+Model evaluations suggested that beta regression with random intercepts (ID) best characterized the data.
 
 ```{r rq1unscreenedFE, message=FALSE, warning=FALSE}
 

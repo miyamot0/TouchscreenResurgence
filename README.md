@@ -132,9 +132,6 @@ FE.1
 
 #### Unscreened Set
 
-Note: The AICc was close, but I prefer to go maximal (more complex)
-whenever possible.
-
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <caption>
 RE Comparisons (RE.1 Selected)
@@ -187,6 +184,10 @@ RE.2
 </tr>
 </tbody>
 </table>
+
+Model evaluations suggested that beta regression with random intercepts
+(ID) best characterized the data.
+
 <table class="table" style="margin-left: auto; margin-right: auto;">
 <caption>
 FE Comparisons (FE.1 Selected, no interaction)
