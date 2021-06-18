@@ -53,8 +53,7 @@ database.screen.id = read.csv("swipedataanglesall.csv") %>%
 database.full = database.full %>%
   mutate(Included = ifelse(UID %in% database.screen.id, TRUE, FALSE))
 
-store =
-database.full %>%
+store = database.full %>%
   group_by(Included, UID) %>%
   slice(1) %>%
   summarise(
@@ -170,8 +169,6 @@ ggplot(uData.grp, aes(Time, pred,
   ) +
   facet_wrap(~ Group)
 
-
-
 ```
 
 ### RQ1: To what degree does the duration of target-reinforcement history in Phase 1 influence observed rates of resurgence as target responses as a proportion of previously reinforced responses (i.e., Target, Alternative)?
@@ -180,65 +177,84 @@ ggplot(uData.grp, aes(Time, pred,
 
 ```{r rq1screenedRE, message=FALSE, warning=FALSE}
 
-database <- database.full %>%
-  filter(Included == TRUE) %>%
-  mutate(Angle.Diff = Angle - Base.Angle,
-         Responding = Angle.Diff,
-         Responding = ifelse(Responding < -270, 360-abs(Responding), Responding),
-         Responding = ifelse(Responding < -180, 180-abs(Responding), Responding),
-         Responding = ifelse(Responding >  270, 360-abs(Responding), Responding),
-         Responding = ifelse(Responding >  180, 180-abs(Responding), Responding)) %>%#,
-  filter(Phase == "C") %>%
-  mutate(Responding = abs(Responding)) %>%
-  mutate(Response   = ifelse(Responding <= 22.5,  "Target", "Other")) %>%
-  mutate(Response   = ifelse(Responding >= 157.5, "Alternative", Response)) %>%
-  mutate(Response   = ifelse(Response == "Other", "Control", Response)) %>%
-  mutate(Responding = ifelse(Responding > 90,     Responding - 90, Responding)) %>%
-  mutate(Responding = Responding - 45)
-
-for (i in unique(database$UID)) {
-  startTime <- database %>%
-    filter(UID == i) %>%
-    select(Time) %>%
-    pull() %>%
-    min()
-
-  database[database$UID == i, "SessionTime"] <- (database[database$UID == i, 
-                                                         "Time"] - startTime)/1000
-  database[database$UID == i, "Time"] <- floor(database[database$UID == i, 
-                                                       "SessionTime"] / 20) + 1
-}
-
-database.organized <- database %>%
-  group_by(UID, Group, Time, Response) %>%
-  summarise(
-    Frequency = n()
-  ) %>%
+colData <- read.csv("RawDataOG_ALL.csv",check.names=FALSE) %>%
+  gather(Time, Frequency, -Group, -PID, -Tag) %>%
+  mutate(Response = ifelse(str_detect(Time, "ALT_"), "Alternative", "Target"),
+         Time = str_extract(Time, "\\-*\\d+\\.*\\d*"),
+         Time = as.numeric(Time),
+         Phase = "B",
+         Phase = ifelse(Time < 10, "A", Phase),
+         Phase = ifelse(Time > 18, "C", Phase),
+         Time = as.numeric(Time) - 18) %>%
   spread(Response, Frequency) %>%
-  mutate(Alternative = ifelse(is.na(Alternative), 0, Alternative),
-         Control     = ifelse(is.na(Control),     0, Control),
-         Target      = ifelse(is.na(Target),      0, Target)) %>%
-  mutate(Proportion = Target / (Alternative + Target)) %>%
+  mutate(TotalInBin = Target + Alternative,
+         Proportion = Target / TotalInBin) %>%
+  mutate(Group = factor(Group,
+                        levels = c("No Baseline", "Short Baseline", "Long Baseline"),
+                        labels = c("None", "Short", "Long"))) %>%
+  filter(Group != "Baseline Only") %>%
+  filter(Phase == "C") %>%
   filter(Proportion > 0 & Proportion < 1)
 
+# database <- database.full %>%
+#   filter(Included == TRUE) %>%
+#   mutate(Angle.Diff = Angle - Base.Angle,
+#          Responding = Angle.Diff,
+#          Responding = ifelse(Responding < -270, 360-abs(Responding), Responding),
+#          Responding = ifelse(Responding < -180, 180-abs(Responding), Responding),
+#          Responding = ifelse(Responding >  270, 360-abs(Responding), Responding),
+#          Responding = ifelse(Responding >  180, 180-abs(Responding), Responding)) %>%#,
+#   filter(Phase == "C") %>%
+#   mutate(Responding = abs(Responding)) %>%
+#   mutate(Response   = ifelse(Responding <= 22.5,  "Target", "Other")) %>%
+#   mutate(Response   = ifelse(Responding >= 157.5, "Alternative", Response)) %>%
+#   mutate(Response   = ifelse(Response == "Other", "Control", Response)) %>%
+#   mutate(Responding = ifelse(Responding > 90,     Responding - 90, Responding)) %>%
+#   mutate(Responding = Responding - 45)
+# 
+# for (i in unique(database$UID)) {
+#   startTime <- database %>%
+#     filter(UID == i) %>%
+#     select(Time) %>%
+#     pull() %>%
+#     min()
+# 
+#   database[database$UID == i, "SessionTime"] <- (database[database$UID == i, 
+#                                                          "Time"] - startTime)/1000
+#   database[database$UID == i, "Time"] <- floor(database[database$UID == i, 
+#                                                        "SessionTime"] / 20) + 1
+# }
+# 
+# database.organized <- database %>%
+#   group_by(UID, Group, Time, Response) %>%
+#   summarise(
+#     Frequency = n()
+#   ) %>%
+#   spread(Response, Frequency) %>%
+#   mutate(Alternative = ifelse(is.na(Alternative), 0, Alternative),
+#          Control     = ifelse(is.na(Control),     0, Control),
+#          Target      = ifelse(is.na(Target),      0, Target)) %>%
+#   mutate(Proportion = Target / (Alternative + Target)) %>%
+#   filter(Proportion > 0 & Proportion < 1)
+
 RE.NO <- betareg(Proportion ~ Time * Group,
-                 data = database.organized,
+                 data = colData,
                  link = "logit",
                  na.action = na.omit)
 
-RE.1 <- glmmTMB(Proportion ~ Time * Group + (1 | UID),
+RE.1 <- glmmTMB(Proportion ~ Time * Group + (1 | PID),
                 control = mControl,
                 family=beta_family(),
                 REML = TRUE,
                 na.action = na.omit,
-                data = database.organized)
+                data = colData)
 
-RE.2 <- glmmTMB(Proportion ~ Time * Group + (Time | UID),
+RE.2 <- glmmTMB(Proportion ~ Time * Group + (Time | PID),
                 control = mControl,
                 family=beta_family(),
                 REML = TRUE,
                 na.action = na.omit,
-                data = database.organized)
+                data = colData)
 
 AICc(RE.NO, RE.1, RE.2) %>%
   kable(caption = "RE Comparisons (RE.NO Selected)") %>%
@@ -251,12 +267,12 @@ Model evaluations suggested that beta regression alone [RE.NO], without random e
 ```{r rq1screenedFE, message=FALSE, warning=FALSE}
 
 FE.0 <- betareg(Proportion ~ Time * Group,
-                 data = database.organized,
+                 data = colData,
                  link = "logit",
                  na.action = na.omit)
 
 FE.1 <- betareg(Proportion ~ Time + Group,
-                data = database.organized,
+                data = colData,
                 link = "logit",
                 na.action = na.omit)
 
@@ -264,16 +280,16 @@ AICc(FE.0, FE.1) %>%
   kable(caption = "FE Comparisons (FE.1 Selected, no interaction)") %>%
   kableExtra::kable_styling(full_width = TRUE)
  
-database.organized$pred = predict(FE.1,
+colData$pred = predict(FE.1,
                                   level = 0,
                                   type = "response",
                                   re.form = NA)
 
-database.organized$predi= predict(FE.1,
+colData$predi= predict(FE.1,
                                  type = "response",
                                  re.form = NULL)
 
-pop = ggplot(database.organized, aes(Time, pred, color = Group)) +
+pop = ggplot(colData, aes(Time, pred, color = Group)) +
   ylim(0,1) +
   theme_bw() +
   geom_line()
@@ -284,9 +300,9 @@ estimates = emmeans::emmeans(FE.1, ~ Time | Group, type = "response",
                                )) %>%
   as.data.frame()
  
-ggplot(database.organized, aes(Time, predi,
-                                     color = Group,
-                                     group = UID)) +
+ggplot(colData, aes(Time, predi,
+                    color = Group,
+                    group = PID)) +
   ylim(0,1) +
   theme_bw() +
   geom_line() +
@@ -390,14 +406,14 @@ Model evaluations suggested that beta regression with random intercepts (ID) bes
 FE.0 <- glmmTMB(Proportion ~ Time * Group + (1 | UID),
                 control = mControl,
                 family=beta_family(),
-                REML = TRUE,
+                REML = FALSE,
                 na.action = na.omit,
                 data = database.organized)
 
 FE.1 <- glmmTMB(Proportion ~ Time + Group + (1 | UID),
                 control = mControl,
                 family=beta_family(),
-                REML = TRUE,
+                REML = FALSE,
                 na.action = na.omit,
                 data = database.organized)
 

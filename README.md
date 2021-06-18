@@ -3,16 +3,16 @@
 
 ## Authors
 
-  - Carolyn M. Ritchey (Auburn University)
+-   Carolyn M. Ritchey (Auburn University)
 
-  - Yuto Mizutani (Aichi Gakuin University)
+-   Yuto Mizutani (Aichi Gakuin University)
 
-  - Toshikazu Kuroda (Huckle Co., Ltd., Aichi, Japan; Aichi Bunkyo
+-   Toshikazu Kuroda (Huckle Co., Ltd., Aichi, Japan; Aichi Bunkyo
     University)
 
-  - Shawn Gilroy (Louisiana State University)
+-   Shawn Gilroy (Louisiana State University)
 
-  - Christopher A. Podlesnik (Auburn University)
+-   Christopher A. Podlesnik (Auburn University)
 
 ## Abstract
 
@@ -105,412 +105,230 @@ response generalization in resurgence.
 #### Screened Set
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
-
 <caption>
-
 RE Comparisons (RE.NO Selected)
-
 </caption>
-
 <thead>
-
 <tr>
-
 <th style="text-align:left;">
-
 </th>
-
 <th style="text-align:right;">
-
 df
-
 </th>
-
 <th style="text-align:right;">
-
 AICc
-
 </th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 <tr>
-
 <td style="text-align:left;">
-
 RE.NO
-
 </td>
-
 <td style="text-align:right;">
-
 7
-
 </td>
-
 <td style="text-align:right;">
-
-\-74.88479
-
+-64.64782
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 RE.1
-
 </td>
-
 <td style="text-align:right;">
-
 8
-
 </td>
-
 <td style="text-align:right;">
-
-\-69.56748
-
+-45.31231
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 RE.2
-
 </td>
-
 <td style="text-align:right;">
-
 10
-
 </td>
-
 <td style="text-align:right;">
-
-\-66.17144
-
+-46.01915
 </td>
-
 </tr>
-
 </tbody>
-
 </table>
 
 Model evaluations suggested that beta regression alone \[RE.NO\],
 without random effects, best characterized the available data.
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
-
 <caption>
-
 FE Comparisons (FE.1 Selected, no interaction)
-
 </caption>
-
 <thead>
-
 <tr>
-
 <th style="text-align:left;">
-
 </th>
-
 <th style="text-align:right;">
-
 df
-
 </th>
-
 <th style="text-align:right;">
-
 AICc
-
 </th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 <tr>
-
 <td style="text-align:left;">
-
 FE.0
-
 </td>
-
 <td style="text-align:right;">
-
 7
-
 </td>
-
 <td style="text-align:right;">
-
-\-74.88479
-
+-64.64782
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 FE.1
-
 </td>
-
 <td style="text-align:right;">
-
 5
-
 </td>
-
 <td style="text-align:right;">
-
-\-78.98288
-
+-67.74101
 </td>
-
 </tr>
-
 </tbody>
-
 </table>
 
 ![](README_figs/README-rq1screenedFE-1.png)<!-- -->
 
     ## 
     ## Call:
-    ## betareg(formula = Proportion ~ Time + Group, data = database.organized, 
-    ##     na.action = na.omit, link = "logit")
+    ## betareg(formula = Proportion ~ Time + Group, data = colData, na.action = na.omit, 
+    ##     link = "logit")
     ## 
     ## Standardized weighted residuals 2:
     ##     Min      1Q  Median      3Q     Max 
-    ## -3.7438 -0.4991  0.0196  0.6503  2.1625 
+    ## -2.8935 -0.5648 -0.0018  0.6609  2.9298 
     ## 
     ## Coefficients (mean model with logit link):
-    ##                  Estimate Std. Error z value Pr(>|z|)   
-    ## (Intercept)       0.52325    0.17497   2.991  0.00278 **
-    ## Time              0.05883    0.03961   1.485  0.13748   
-    ## GroupGroup None  -0.16552    0.16174  -1.023  0.30614   
-    ## GroupGroup Short -0.06489    0.16459  -0.394  0.69337   
+    ##             Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept) -0.79417    0.17448  -4.552 5.32e-06 ***
+    ## Time         0.09173    0.03820   2.401  0.01635 *  
+    ## GroupShort   0.11921    0.16304   0.731  0.46469    
+    ## GroupLong    0.42148    0.15456   2.727  0.00639 ** 
     ## 
     ## Phi coefficients (precision model with identity link):
     ##       Estimate Std. Error z value Pr(>|z|)    
-    ## (phi)   4.7404     0.4873   9.728   <2e-16 ***
+    ## (phi)   5.3442     0.5626   9.499   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
     ## 
     ## Type of estimator: ML (maximum likelihood)
-    ## Log-likelihood: 44.68 on 5 Df
-    ## Pseudo R-squared: 0.02078
-    ## Number of iterations: 18 (BFGS) + 2 (Fisher scoring)
+    ## Log-likelihood: 39.07 on 5 Df
+    ## Pseudo R-squared: 0.08482
+    ## Number of iterations: 12 (BFGS) + 3 (Fisher scoring)
 
 #### Unscreened Set
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
-
 <caption>
-
 RE Comparisons (RE.1 Selected)
-
 </caption>
-
 <thead>
-
 <tr>
-
 <th style="text-align:left;">
-
 </th>
-
 <th style="text-align:right;">
-
 df
-
 </th>
-
 <th style="text-align:right;">
-
 AICc
-
 </th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 <tr>
-
 <td style="text-align:left;">
-
 RE.NO
-
 </td>
-
 <td style="text-align:right;">
-
 7
-
 </td>
-
 <td style="text-align:right;">
-
-\-104.8066
-
+-104.8066
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 RE.1
-
 </td>
-
 <td style="text-align:right;">
-
 8
-
 </td>
-
 <td style="text-align:right;">
-
-\-115.2665
-
+-115.2665
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 RE.2
-
 </td>
-
 <td style="text-align:right;">
-
 10
-
 </td>
-
 <td style="text-align:right;">
-
-\-113.1423
-
+-113.1423
 </td>
-
 </tr>
-
 </tbody>
-
 </table>
 
 Model evaluations suggested that beta regression with random intercepts
 (ID) best characterized the data.
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
-
 <caption>
-
 FE Comparisons (FE.1 Selected, no interaction)
-
 </caption>
-
 <thead>
-
 <tr>
-
 <th style="text-align:left;">
-
 </th>
-
 <th style="text-align:right;">
-
 df
-
 </th>
-
 <th style="text-align:right;">
-
 AICc
-
 </th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 <tr>
-
 <td style="text-align:left;">
-
 FE.0
-
 </td>
-
 <td style="text-align:right;">
-
 8
-
 </td>
-
 <td style="text-align:right;">
-
-\-115.2665
-
+-132.3532
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 FE.1
-
 </td>
-
 <td style="text-align:right;">
-
 6
-
 </td>
-
 <td style="text-align:right;">
-
-\-126.0588
-
+-136.2830
 </td>
-
 </tr>
-
 </tbody>
-
 </table>
 
 ![](README_figs/README-rq1unscreenedFE-1.png)<!-- -->
@@ -520,23 +338,23 @@ FE.1
     ## Data: database.organized
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##   -126.5   -106.4     69.2   -138.5      207 
+    ##   -136.7   -116.6     74.3   -148.7      203 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups Name        Variance Std.Dev.
-    ##  UID    (Intercept) 0.2986   0.5464  
+    ##  UID    (Intercept) 0.2655   0.5152  
     ## Number of obs: 209, groups:  UID, 40
     ## 
-    ## Overdispersion parameter for beta family (): 7.01 
+    ## Overdispersion parameter for beta family (): 6.99 
     ## 
     ## Conditional model:
     ##                  Estimate Std. Error z value Pr(>|z|)   
-    ## (Intercept)       0.56575    0.19892   2.844  0.00445 **
-    ## Time              0.05979    0.03132   1.909  0.05631 . 
-    ## GroupGroup None  -0.14614    0.25429  -0.575  0.56550   
-    ## GroupGroup Short -0.04532    0.23718  -0.191  0.84847   
+    ## (Intercept)       0.58137    0.19508   2.980  0.00288 **
+    ## Time              0.06128    0.03194   1.919  0.05505 . 
+    ## GroupGroup None  -0.15027    0.24518  -0.613  0.53995   
+    ## GroupGroup Short -0.04675    0.22896  -0.204  0.83820   
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -549,183 +367,94 @@ FE.1
 ![](README_figs/README-rq3ScreenedRose-1.png)<!-- -->![](README_figs/README-rq3ScreenedRose-2.png)<!-- -->
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
-
 <caption>
-
 Reference Swipe (Screened)
-
 </caption>
-
 <thead>
-
 <tr>
-
 <th style="text-align:left;">
-
 Group
-
 </th>
-
 <th style="text-align:right;">
-
 Ave
-
 </th>
-
 <th style="text-align:right;">
-
 sd
-
 </th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 <tr>
-
 <td style="text-align:left;">
-
 Group Long
-
 </td>
-
 <td style="text-align:right;">
-
-\-0.4083333
-
+-0.4083333
 </td>
-
 <td style="text-align:right;">
-
 11.96327
-
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 Group Short
-
 </td>
-
 <td style="text-align:right;">
-
 0.2309142
-
 </td>
-
 <td style="text-align:right;">
-
 11.64014
-
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 Group None
-
 </td>
-
 <td style="text-align:right;">
-
-\-0.2140871
-
+-0.2140871
 </td>
-
 <td style="text-align:right;">
-
 11.83293
-
 </td>
-
 </tr>
-
 </tbody>
-
 </table>
-
 <table class="table" style="margin-left: auto; margin-right: auto;">
-
 <caption>
-
 Levenes Test (Screened)
-
 </caption>
-
 <thead>
-
 <tr>
-
 <th style="text-align:right;">
-
 statistic
-
 </th>
-
 <th style="text-align:right;">
-
 p.value
-
 </th>
-
 <th style="text-align:right;">
-
 df
-
 </th>
-
 <th style="text-align:right;">
-
 df.residual
-
 </th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 <tr>
-
 <td style="text-align:right;">
-
 0.42065
-
 </td>
-
 <td style="text-align:right;">
-
 0.6566574
-
 </td>
-
 <td style="text-align:right;">
-
 2
-
 </td>
-
 <td style="text-align:right;">
-
 3097
-
 </td>
-
 </tr>
-
 </tbody>
-
 </table>
 
 #### Unscreened Set
@@ -735,181 +464,92 @@ df.residual
 ![](README_figs/README-rq3UnscreenedRose-1.png)<!-- -->![](README_figs/README-rq3UnscreenedRose-2.png)<!-- -->
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
-
 <caption>
-
 Reference Swipe (Unscreened)
-
 </caption>
-
 <thead>
-
 <tr>
-
 <th style="text-align:left;">
-
 Group
-
 </th>
-
 <th style="text-align:right;">
-
 Ave
-
 </th>
-
 <th style="text-align:right;">
-
 sd
-
 </th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 <tr>
-
 <td style="text-align:left;">
-
 Group Long
-
 </td>
-
 <td style="text-align:right;">
-
 1.6585535
-
 </td>
-
 <td style="text-align:right;">
-
 12.86927
-
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 Group Short
-
 </td>
-
 <td style="text-align:right;">
-
-\-0.0391621
-
+-0.0391621
 </td>
-
 <td style="text-align:right;">
-
 10.99179
-
 </td>
-
 </tr>
-
 <tr>
-
 <td style="text-align:left;">
-
 Group None
-
 </td>
-
 <td style="text-align:right;">
-
-\-0.4386266
-
+-0.4386266
 </td>
-
 <td style="text-align:right;">
-
 11.74291
-
 </td>
-
 </tr>
-
 </tbody>
-
 </table>
-
 <table class="table" style="margin-left: auto; margin-right: auto;">
-
 <caption>
-
 Levenes Test (Unscreened)
-
 </caption>
-
 <thead>
-
 <tr>
-
 <th style="text-align:right;">
-
 statistic
-
 </th>
-
 <th style="text-align:right;">
-
 p.value
-
 </th>
-
 <th style="text-align:right;">
-
 df
-
 </th>
-
 <th style="text-align:right;">
-
 df.residual
-
 </th>
-
 </tr>
-
 </thead>
-
 <tbody>
-
 <tr>
-
 <td style="text-align:right;">
-
 42.61284
-
 </td>
-
 <td style="text-align:right;">
-
 0
-
 </td>
-
 <td style="text-align:right;">
-
 2
-
 </td>
-
 <td style="text-align:right;">
-
 4796
-
 </td>
-
 </tr>
-
 </tbody>
-
 </table>
