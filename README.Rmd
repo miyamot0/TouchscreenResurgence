@@ -105,11 +105,26 @@ Round <- function(x,y) {
 
 Resurgence occurs when a previously reinforced and then extinguished target response increases due to reducing/eliminating an alternative source of reinforcement or punishing an alternative response. We evaluated whether duration of reinforcement history for a target response (1) affects the degree to which a resurgence effect is observed in humans and (2) produces different gradients of response generalization around target responding during extinction testing. We arranged a novel touchscreen interface in which university students could swipe a 3D soccer ball to spin any direction. In Phase 1, the first direction swiped became the target and produced points exchangeable for money for 3 or 1 min across two groups. The first swipe was recorded but had no programmed consequence in a third group. In Phase 2, swipes 180-degrees from the target resulted in points for 3 min in all groups. Point deliveries ceased for 2 min to test for resurgence in Phase 3. Target responses resurged during testing to a relatively greater extent with longer Phase-1 training but gradients of response generalization did not differ among groups. These findings extend prior research on the role of training duration on resurgence. We discuss methodological and conceptual issues surrounding the assessment of response generalization in resurgence. 
 
-### Descriptives
+## Included files
+
+
+Data:
+
+- Swipe U Value.csv (Phase-level U values calculated for each individual/phase)
+
+- RawDataOG_ALL.csv (Pre-binned and cleaned data with responding across individuals)
+
+- swipedataanglesall.csv (Raw data regarding swipes from participants with clean data)
+
+- swipedataanglesallfull.csv (Raw data regarding swipes from all participants)
+
+## Study Results (with and without data cleaning)
+
+### Descriptives (U-values)
 
 ```{r descriptiveScreened}
 
-uData     <- read.csv ("Swipe U Value.csv", header = TRUE)
+uData     <- read.csv("Swipe U Value.csv", header = TRUE)
 
 uData.grp <- groupedData(Uvalue ~ as.factor(Group) * 
                            as.factor(Phase) * 
@@ -117,50 +132,50 @@ uData.grp <- groupedData(Uvalue ~ as.factor(Group) *
                          data = uData)
 
 fullModel <- gls(Uvalue ~ Group * Phase * Time, 
-                 data = uData.grp,
-                 method = "ML",
-                 corr = corCompSymm(form= ~ 1 | id))
+                 data        = uData.grp,
+                 method      = "ML",
+                 correlation = corCompSymm(form = ~ 1 | id))
 
 rstModl.1 <- gls(Uvalue ~ Group + Phase + Time + Group:Phase + Group:Time + Phase:Time, 
-                 data = uData.grp,
-                 method = "ML",
-                 corr = corCompSymm(form= ~ 1 | id))
+                 data        = uData.grp,
+                 method      = "ML",
+                 correlation = corCompSymm(form = ~ 1 | id))
 
 anova(fullModel, rstModl.1)
 
 rstModl.2 <- gls(Uvalue ~ Group + Phase + Time + Group:Phase + Phase:Time, 
-                 data = uData.grp,
-                 method = "ML",
-                 corr = corCompSymm(form= ~ 1 | id))
+                 data        = uData.grp,
+                 method      = "ML",
+                 correlation = corCompSymm(form = ~ 1 | id))
 
 anova(rstModl.1, rstModl.2)
 
 rstModl.3 <- gls(Uvalue ~ Group + Phase + Time + Group:Phase, 
-                 data = uData.grp,
-                 method = "ML",
-                 corr = corCompSymm(form= ~ 1 | id))
+                 data        = uData.grp,
+                 method      = "ML",
+                 correlation = corCompSymm(form = ~ 1 | id))
 
 anova(rstModl.2, rstModl.3)
 
 rstModl.4 <- gls(Uvalue ~ Group + Phase + Time, 
-                 data = uData.grp,
-                 method = "ML",
-                 corr = corCompSymm(form= ~ 1 | id))
+                 data        = uData.grp,
+                 method      = "ML",
+                 correlation = corCompSymm(form = ~ 1 | id))
 
 anova(rstModl.3, rstModl.4)
 
 summary(rstModl.2)
 
 uData.grp$Phase = as.factor(uData.grp$Phase)
-uData.grp$pred = predict(rstModl.2)
+uData.grp$pred  = predict(rstModl.2)
 
 ggplot(uData.grp, aes(Time, pred,
                       color = Phase)) +
   geom_line() +
   ylim(0, 1) +
   labs(
-    y = "Proportion of Target",
-    x = "10s Bin",
+    y = "U Values",
+    x = "Minute",
     title = "Screened dataset (Null Except for Intercept)"
   ) +
   theme_bw() +
@@ -177,7 +192,7 @@ ggplot(uData.grp, aes(Time, pred,
 
 ```{r rq1screenedRE, message=FALSE, warning=FALSE}
 
-colData <- read.csv("RawDataOG_ALL.csv",check.names=FALSE) %>%
+colData <- read.csv("RawDataOG_ALL.csv", check.names = FALSE) %>%
   gather(Time, Frequency, -Group, -PID, -Tag) %>%
   mutate(Response = ifelse(str_detect(Time, "ALT_"), "Alternative", "Target"),
          Time = str_extract(Time, "\\-*\\d+\\.*\\d*"),
@@ -196,65 +211,24 @@ colData <- read.csv("RawDataOG_ALL.csv",check.names=FALSE) %>%
   filter(Phase == "C") %>%
   filter(Proportion > 0 & Proportion < 1)
 
-# database <- database.full %>%
-#   filter(Included == TRUE) %>%
-#   mutate(Angle.Diff = Angle - Base.Angle,
-#          Responding = Angle.Diff,
-#          Responding = ifelse(Responding < -270, 360-abs(Responding), Responding),
-#          Responding = ifelse(Responding < -180, 180-abs(Responding), Responding),
-#          Responding = ifelse(Responding >  270, 360-abs(Responding), Responding),
-#          Responding = ifelse(Responding >  180, 180-abs(Responding), Responding)) %>%#,
-#   filter(Phase == "C") %>%
-#   mutate(Responding = abs(Responding)) %>%
-#   mutate(Response   = ifelse(Responding <= 22.5,  "Target", "Other")) %>%
-#   mutate(Response   = ifelse(Responding >= 157.5, "Alternative", Response)) %>%
-#   mutate(Response   = ifelse(Response == "Other", "Control", Response)) %>%
-#   mutate(Responding = ifelse(Responding > 90,     Responding - 90, Responding)) %>%
-#   mutate(Responding = Responding - 45)
-# 
-# for (i in unique(database$UID)) {
-#   startTime <- database %>%
-#     filter(UID == i) %>%
-#     select(Time) %>%
-#     pull() %>%
-#     min()
-# 
-#   database[database$UID == i, "SessionTime"] <- (database[database$UID == i, 
-#                                                          "Time"] - startTime)/1000
-#   database[database$UID == i, "Time"] <- floor(database[database$UID == i, 
-#                                                        "SessionTime"] / 20) + 1
-# }
-# 
-# database.organized <- database %>%
-#   group_by(UID, Group, Time, Response) %>%
-#   summarise(
-#     Frequency = n()
-#   ) %>%
-#   spread(Response, Frequency) %>%
-#   mutate(Alternative = ifelse(is.na(Alternative), 0, Alternative),
-#          Control     = ifelse(is.na(Control),     0, Control),
-#          Target      = ifelse(is.na(Target),      0, Target)) %>%
-#   mutate(Proportion = Target / (Alternative + Target)) %>%
-#   filter(Proportion > 0 & Proportion < 1)
-
 RE.NO <- betareg(Proportion ~ Time * Group,
-                 data = colData,
-                 link = "logit",
+                 data      = colData,
+                 link      = "logit",
                  na.action = na.omit)
 
 RE.1 <- glmmTMB(Proportion ~ Time * Group + (1 | PID),
-                control = mControl,
-                family=beta_family(),
-                REML = TRUE,
+                control   = mControl,
+                family    = beta_family(),
+                REML      = TRUE,
                 na.action = na.omit,
-                data = colData)
+                data      = colData)
 
 RE.2 <- glmmTMB(Proportion ~ Time * Group + (Time | PID),
-                control = mControl,
-                family=beta_family(),
-                REML = TRUE,
+                control   = mControl,
+                family    = beta_family(),
+                REML      = TRUE,
                 na.action = na.omit,
-                data = colData)
+                data      = colData)
 
 AICc(RE.NO, RE.1, RE.2) %>%
   kable(caption = "RE Comparisons (RE.NO Selected)") %>%
@@ -281,13 +255,13 @@ AICc(FE.0, FE.1) %>%
   kableExtra::kable_styling(full_width = TRUE)
  
 colData$pred = predict(FE.1,
-                                  level = 0,
-                                  type = "response",
-                                  re.form = NA)
+                       level = 0,
+                       type = "response",
+                       re.form = NA)
 
 colData$predi= predict(FE.1,
-                                 type = "response",
-                                 re.form = NULL)
+                       type = "response",
+                       re.form = NULL)
 
 pop = ggplot(colData, aes(Time, pred, color = Group)) +
   ylim(0,1) +
@@ -297,7 +271,8 @@ pop = ggplot(colData, aes(Time, pred, color = Group)) +
 estimates = emmeans::emmeans(FE.1, ~ Time | Group, type = "response",
                              at = list(
                                Time = c(1, 2, 3, 4, 5, 6)
-                               )) %>%
+                               )
+                             ) %>%
   as.data.frame()
  
 ggplot(colData, aes(Time, predi,
@@ -375,23 +350,23 @@ database.organized <- database %>%
   filter(Proportion > 0 & Proportion < 1)
 
 RE.NO <- betareg(Proportion ~ Time * Group,
-                 data = database.organized,
-                 link = "logit",
+                 data      = database.organized,
+                 link      = "logit",
                  na.action = na.omit)
 
 RE.1 <- glmmTMB(Proportion ~ Time * Group + (1 | UID),
-                control = mControl,
-                family=beta_family(),
-                REML = TRUE,
+                control   = mControl,
+                family    = beta_family(),
+                REML      = TRUE,
                 na.action = na.omit,
-                data = database.organized)
+                data      = database.organized)
 
 RE.2 <- glmmTMB(Proportion ~ Time * Group + (Time | UID),
-                control = mControl,
-                family=beta_family(),
-                REML = TRUE,
+                control   = mControl,
+                family    = beta_family(),
+                REML      = TRUE,
                 na.action = na.omit,
-                data = database.organized)
+                data      = database.organized)
 
 AICc(RE.NO, RE.1, RE.2) %>%
   kable(caption = "RE Comparisons (RE.1 Selected)") %>%
@@ -404,18 +379,18 @@ Model evaluations suggested that beta regression with random intercepts (ID) bes
 ```{r rq1unscreenedFE, message=FALSE, warning=FALSE}
 
 FE.0 <- glmmTMB(Proportion ~ Time * Group + (1 | UID),
-                control = mControl,
-                family=beta_family(),
-                REML = FALSE,
+                control   = mControl,
+                family    = beta_family(),
+                REML      = FALSE,
                 na.action = na.omit,
-                data = database.organized)
+                data      = database.organized)
 
 FE.1 <- glmmTMB(Proportion ~ Time + Group + (1 | UID),
-                control = mControl,
-                family=beta_family(),
-                REML = FALSE,
+                control   = mControl,
+                family    = beta_family(),
+                REML      = FALSE,
                 na.action = na.omit,
-                data = database.organized)
+                data      = database.organized)
 
 AICc(FE.0, FE.1) %>%
   kable(caption = "FE Comparisons (FE.1 Selected, no interaction)") %>%
@@ -426,9 +401,9 @@ database.organized$pred = predict(FE.1,
                                   type = "response",
                                   re.form = NA)
 
-database.organized$predi= predict(FE.1,
-                                  type = "response",
-                                  re.form = NULL)
+database.organized$predi = predict(FE.1,
+                                   type = "response",
+                                   re.form = NULL)
 
 pop = ggplot(database.organized, aes(Time, pred, color = Group)) +
   ylim(0,1) +
@@ -445,8 +420,8 @@ database.organized = database.organized %>%
   ungroup()
 
 ggplot(database.organized, aes(Time, predi,
-                                     color = Group,
-                                     group = UID)) +
+                               color = Group,
+                               group = UID)) +
   ylim(0,1) +
   theme_bw() +
   geom_line() +
@@ -521,8 +496,8 @@ ggplot(linePlotData, aes(x = xValue, y = Counts,
   papaja::theme_apa(base_size = 14) +
   scale_x_continuous(breaks = 1:18,
                      labels = xlabs) +
-  geom_vline(xintercept = 7.75, color="black", linetype="dashed", size=.75) +
-  geom_vline(xintercept = 11.25, color="black", linetype="dashed", size=.75) +
+  geom_vline(xintercept = 7.75,  color = "black", linetype = "dashed", size = .75) +
+  geom_vline(xintercept = 11.25, color = "black", linetype = "dashed", size = .75) +
   scale_fill_manual(name = "Group",
                      values = c("Long" = "#000000",
                                 "Short" = "#666666",
@@ -536,7 +511,7 @@ ggplot(linePlotData, aes(x = xValue, y = Counts,
   ) +
   theme(axis.text.x = element_text(angle = 90,
                                    vjust = 0.5,
-                                   hjust=1,
+                                   hjust = 1,
                                    color = "black"),
         legend.position = 'bottom')
 
@@ -606,14 +581,11 @@ plotPrintAll <- ggplot(d, aes(x = Angle.Diff,
       legend.position = "none") +
   facet_grid(Phase~Group)
 
-# plotPrintAll
-
-d <- d %>%
-  filter(Phase == "Phase 3")
+d <- d %>% filter(Phase == "Phase 3")
 
 plotPrintFocus <- ggplot(d, aes(x = Angle.Diff,
-                           y = Frequency,
-                           fill = Response)) +
+                                y = Frequency,
+                                fill = Response)) +
   ggtitle("Swipe Directions across Phase 3 (Magnified)") +
   coord_polar(theta = "x",
               start = 0) +
@@ -728,8 +700,8 @@ ggplot(linePlotData, aes(x = xValue, y = Counts,
   papaja::theme_apa(base_size = 14) +
   scale_x_continuous(breaks = 1:18,
                      labels = xlabs) +
-  geom_vline(xintercept = 7.75, color="black", linetype="dashed", size=.75) +
-  geom_vline(xintercept = 11.25, color="black", linetype="dashed", size=.75) +
+  geom_vline(xintercept = 7.75,  color = "black", linetype = "dashed", size = .75) +
+  geom_vline(xintercept = 11.25, color = "black", linetype = "dashed", size = .75) +
   scale_fill_manual(name = "Group",
                      values = c("Long" = "#000000",
                                 "Short" = "#666666",
@@ -743,7 +715,7 @@ ggplot(linePlotData, aes(x = xValue, y = Counts,
   ) +
   theme(axis.text.x = element_text(angle = 90,
                                    vjust = 0.5,
-                                   hjust=1,
+                                   hjust = 1,
                                    color = "black"),
         legend.position = 'bottom')
 
@@ -815,8 +787,8 @@ plotPrintAll <- ggplot(d, aes(x = Angle.Diff,
 d <- d %>% filter(Phase == "Phase 3")
 
 plotPrintFocus <- ggplot(d, aes(x = Angle.Diff,
-                           y = Frequency,
-                           fill = Response)) +
+                                y = Frequency,
+                                fill = Response)) +
   ggtitle("Swipe Directions across Phase 3 (Magnified)") +
   coord_polar(theta = "x",
               start = 0) +

@@ -3,16 +3,16 @@
 
 ## Authors
 
--   Carolyn M. Ritchey (Auburn University)
+  - Carolyn M. Ritchey (Auburn University)
 
--   Yuto Mizutani (Aichi Gakuin University)
+  - Yuto Mizutani (Aichi Gakuin University)
 
--   Toshikazu Kuroda (Huckle Co., Ltd., Aichi, Japan; Aichi Bunkyo
+  - Toshikazu Kuroda (Huckle Co., Ltd., Aichi, Japan; Aichi Bunkyo
     University)
 
--   Shawn Gilroy (Louisiana State University)
+  - Shawn Gilroy (Louisiana State University)
 
--   Christopher A. Podlesnik (Auburn University)
+  - Christopher A. Podlesnik (Auburn University)
 
 ## Abstract
 
@@ -37,7 +37,25 @@ research on the role of training duration on resurgence. We discuss
 methodological and conceptual issues surrounding the assessment of
 response generalization in resurgence.
 
-### Descriptives
+## Included files
+
+Data:
+
+  - Swipe U Value.csv (Phase-level U values calculated for each
+    individual/phase)
+
+  - RawDataOG\_ALL.csv (Pre-binned and cleaned data with responding
+    across individuals)
+
+  - swipedataanglesall.csv (Raw data regarding swipes from participants
+    with clean data)
+
+  - swipedataanglesallfull.csv (Raw data regarding swipes from all
+    participants)
+
+## Study Results (with and without data cleaning)
+
+### Descriptives (U-values)
 
     ## Warning in Ops.factor(as.factor(Group), as.factor(Phase)): '*' not meaningful
     ## for factors
@@ -105,101 +123,192 @@ response generalization in resurgence.
 #### Screened Set
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
+
 <caption>
+
 RE Comparisons (RE.NO Selected)
+
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:left;">
+
 </th>
+
 <th style="text-align:right;">
+
 df
+
 </th>
+
 <th style="text-align:right;">
+
 AICc
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:left;">
+
 RE.NO
+
 </td>
+
 <td style="text-align:right;">
+
 7
+
 </td>
+
 <td style="text-align:right;">
--64.64782
+
+\-64.64782
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 RE.1
+
 </td>
+
 <td style="text-align:right;">
+
 8
+
 </td>
+
 <td style="text-align:right;">
--45.31231
+
+\-45.31231
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 RE.2
+
 </td>
+
 <td style="text-align:right;">
+
 10
+
 </td>
+
 <td style="text-align:right;">
--46.01915
+
+\-46.01915
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 Model evaluations suggested that beta regression alone \[RE.NO\],
 without random effects, best characterized the available data.
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
+
 <caption>
+
 FE Comparisons (FE.1 Selected, no interaction)
+
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:left;">
+
 </th>
+
 <th style="text-align:right;">
+
 df
+
 </th>
+
 <th style="text-align:right;">
+
 AICc
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:left;">
+
 FE.0
+
 </td>
+
 <td style="text-align:right;">
+
 7
+
 </td>
+
 <td style="text-align:right;">
--64.64782
+
+\-64.64782
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 FE.1
+
 </td>
+
 <td style="text-align:right;">
+
 5
+
 </td>
+
 <td style="text-align:right;">
--67.74101
+
+\-67.74101
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 ![](README_figs/README-rq1screenedFE-1.png)<!-- -->
@@ -234,101 +343,192 @@ FE.1
 #### Unscreened Set
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
+
 <caption>
+
 RE Comparisons (RE.1 Selected)
+
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:left;">
+
 </th>
+
 <th style="text-align:right;">
+
 df
+
 </th>
+
 <th style="text-align:right;">
+
 AICc
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:left;">
+
 RE.NO
+
 </td>
+
 <td style="text-align:right;">
+
 7
+
 </td>
+
 <td style="text-align:right;">
--104.8066
+
+\-104.8066
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 RE.1
+
 </td>
+
 <td style="text-align:right;">
+
 8
+
 </td>
+
 <td style="text-align:right;">
--115.2665
+
+\-115.2665
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 RE.2
+
 </td>
+
 <td style="text-align:right;">
+
 10
+
 </td>
+
 <td style="text-align:right;">
--113.1423
+
+\-113.1423
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 Model evaluations suggested that beta regression with random intercepts
 (ID) best characterized the data.
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
+
 <caption>
+
 FE Comparisons (FE.1 Selected, no interaction)
+
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:left;">
+
 </th>
+
 <th style="text-align:right;">
+
 df
+
 </th>
+
 <th style="text-align:right;">
+
 AICc
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:left;">
+
 FE.0
+
 </td>
+
 <td style="text-align:right;">
+
 8
+
 </td>
+
 <td style="text-align:right;">
--132.3532
+
+\-132.3532
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 FE.1
+
 </td>
+
 <td style="text-align:right;">
+
 6
+
 </td>
+
 <td style="text-align:right;">
--136.2830
+
+\-136.2830
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 ![](README_figs/README-rq1unscreenedFE-1.png)<!-- -->
@@ -347,7 +547,7 @@ FE.1
     ##  UID    (Intercept) 0.2655   0.5152  
     ## Number of obs: 209, groups:  UID, 40
     ## 
-    ## Overdispersion parameter for beta family (): 6.99 
+    ## Dispersion parameter for beta family (): 6.99 
     ## 
     ## Conditional model:
     ##                  Estimate Std. Error z value Pr(>|z|)   
@@ -367,94 +567,183 @@ FE.1
 ![](README_figs/README-rq3ScreenedRose-1.png)<!-- -->![](README_figs/README-rq3ScreenedRose-2.png)<!-- -->
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
+
 <caption>
+
 Reference Swipe (Screened)
+
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:left;">
+
 Group
+
 </th>
+
 <th style="text-align:right;">
+
 Ave
+
 </th>
+
 <th style="text-align:right;">
+
 sd
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:left;">
+
 Group Long
+
 </td>
+
 <td style="text-align:right;">
--0.4083333
+
+\-0.4083333
+
 </td>
+
 <td style="text-align:right;">
+
 11.96327
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 Group Short
+
 </td>
+
 <td style="text-align:right;">
+
 0.2309142
+
 </td>
+
 <td style="text-align:right;">
+
 11.64014
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 Group None
+
 </td>
+
 <td style="text-align:right;">
--0.2140871
+
+\-0.2140871
+
 </td>
+
 <td style="text-align:right;">
+
 11.83293
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
+
 <table class="table" style="margin-left: auto; margin-right: auto;">
+
 <caption>
+
 Levenes Test (Screened)
+
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:right;">
+
 statistic
+
 </th>
+
 <th style="text-align:right;">
+
 p.value
+
 </th>
+
 <th style="text-align:right;">
+
 df
+
 </th>
+
 <th style="text-align:right;">
+
 df.residual
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:right;">
+
 0.42065
+
 </td>
+
 <td style="text-align:right;">
+
 0.6566574
+
 </td>
+
 <td style="text-align:right;">
+
 2
+
 </td>
+
 <td style="text-align:right;">
+
 3097
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
 
 #### Unscreened Set
@@ -464,92 +753,181 @@ df.residual
 ![](README_figs/README-rq3UnscreenedRose-1.png)<!-- -->![](README_figs/README-rq3UnscreenedRose-2.png)<!-- -->
 
 <table class="table" style="margin-left: auto; margin-right: auto;">
+
 <caption>
+
 Reference Swipe (Unscreened)
+
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:left;">
+
 Group
+
 </th>
+
 <th style="text-align:right;">
+
 Ave
+
 </th>
+
 <th style="text-align:right;">
+
 sd
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:left;">
+
 Group Long
+
 </td>
+
 <td style="text-align:right;">
+
 1.6585535
+
 </td>
+
 <td style="text-align:right;">
+
 12.86927
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 Group Short
+
 </td>
+
 <td style="text-align:right;">
--0.0391621
+
+\-0.0391621
+
 </td>
+
 <td style="text-align:right;">
+
 10.99179
+
 </td>
+
 </tr>
+
 <tr>
+
 <td style="text-align:left;">
+
 Group None
+
 </td>
+
 <td style="text-align:right;">
--0.4386266
+
+\-0.4386266
+
 </td>
+
 <td style="text-align:right;">
+
 11.74291
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
+
 <table class="table" style="margin-left: auto; margin-right: auto;">
+
 <caption>
+
 Levenes Test (Unscreened)
+
 </caption>
+
 <thead>
+
 <tr>
+
 <th style="text-align:right;">
+
 statistic
+
 </th>
+
 <th style="text-align:right;">
+
 p.value
+
 </th>
+
 <th style="text-align:right;">
+
 df
+
 </th>
+
 <th style="text-align:right;">
+
 df.residual
+
 </th>
+
 </tr>
+
 </thead>
+
 <tbody>
+
 <tr>
+
 <td style="text-align:right;">
+
 42.61284
+
 </td>
+
 <td style="text-align:right;">
+
 0
+
 </td>
+
 <td style="text-align:right;">
+
 2
+
 </td>
+
 <td style="text-align:right;">
+
 4796
+
 </td>
+
 </tr>
+
 </tbody>
+
 </table>
