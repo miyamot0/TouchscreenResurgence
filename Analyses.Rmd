@@ -26,25 +26,25 @@ library(lmerTest)
 library(lmtest)
 library(tidyverse)
 
-database.full   = read.csv("swipedataanglesallfull.csv") %>%
+database.full   = read.csv("data/swipedataanglesallfull.csv") %>%
   mutate(UID      = paste(ID, Group))
 
 #46 in full (47 actually, 1 is a dupe name)
-read.csv("swipedataanglesallfull.csv") %>%
+read.csv("data/swipedataanglesallfull.csv") %>%
   select(ID) %>%
   pull() %>%
   unique() %>%
   length(.)
 
 #30 in cleaned
-read.csv("swipedataanglesall.csv") %>%
+read.csv("data/swipedataanglesall.csv") %>%
   select(ID) %>%
   pull() %>%
   unique() %>%
   length(.)
 
 #30 in cleaned
-database.screen.id = read.csv("swipedataanglesall.csv") %>%
+database.screen.id = read.csv("data/swipedataanglesall.csv") %>%
   mutate(UID      = paste(ID, Group)) %>%
   select(UID) %>%
   pull() %>%
@@ -124,7 +124,7 @@ Data:
 
 ```{r descriptiveScreened}
 
-uData     <- read.csv("Swipe U Value.csv", header = TRUE)
+uData     <- read.csv("data/Swipe U Value.csv", header = TRUE)
 
 uData.grp <- groupedData(Uvalue ~ as.factor(Group) * 
                            as.factor(Phase) * 
@@ -192,7 +192,7 @@ ggplot(uData.grp, aes(Time, pred,
 
 ```{r rq1screenedRE, message=FALSE, warning=FALSE}
 
-colData <- read.csv("RawDataOG_ALL.csv", check.names = FALSE) %>%
+colData <- read.csv("data/RawDataOG_ALL.csv", check.names = FALSE) %>%
   gather(Time, Frequency, -Group, -PID, -Tag) %>%
   mutate(Response = ifelse(str_detect(Time, "ALT_"), "Alternative", "Target"),
          Time = str_extract(Time, "\\-*\\d+\\.*\\d*"),
